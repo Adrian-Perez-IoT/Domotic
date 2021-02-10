@@ -1,85 +1,36 @@
-#include <XBee.h>
 #include <SoftwareSerial.h>
 #include <ESP8266WiFi.h>
-#include <PubSubClient.h>
-#include <WiFiUdp.h> // UDP library which is how we communicate with Time Server
-#include <TimeLib.h> // Synchronisation library
+
+
+
 #include <ESP8266WiFiMulti.h>
-#include <ArduinoJson.h>
 
-//------------ Feature Timestamp --------------//
-#define WifiTimeOutSeconds 10
-unsigned int localPort = 8888; // Just an open port we can use for the UDP packets coming back in
 
-// This is the "pool" name for any number of NTP servers in the pool.
-// If you're not in the UK, use "time.nist.gov"
-// Elsewhere: USA us.pool.ntp.org
-// Read more here: http://www.pool.ntp.org/en/use.html
-char timeServer[] = "uk.pool.ntp.org";                                                     //"time.nist.gov";
-const int NTP_PACKET_SIZE = 48;                                                            // NTP time stamp is in the first 48 bytes of the message
-byte packetBuffer[NTP_PACKET_SIZE];                                                        //buffer to hold incoming and outgoing packets
-WiFiUDP Udp;                                                                               // A UDP instance to let us send and receive packets over UDP
-const int timeZone = -3;                                                                   // Your time zone relative to GMT/UTC. // Not used (yet)
-String DoW[] = {"Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"}; // Days of week. Day 1 = Sunday
-
-// How often to resync the time (under normal and error conditions)
-#define _resyncSeconds 3600 //300 is 5 minutos // 3600 is 1 hour. 86400 is on day
-#define _resyncErrorSeconds 15
-#define _millisMinute 60000
 
 // forward declarations
 void connectToWifi();
-void printDigits(int digits);
-void digitalClockDisplay();
-time_t getNTPTime();
-//------------ FIN Feature timestamp --------------//
+
+
+
+
 
 ESP8266WiFiMulti wifiMulti;
 boolean connectioWasAlive = true;
 
-//------------ Feature MQTT and Xbee-Arduino--------------//
-// const char* mqtt_server = "mqtt.diveriot.com"; // Activar cuando se pone en produccion, con el servidor cloud
-const char *mqtt_server = "192.168.0.10"; // activar solamente cuando se desarrolla (development) con la PC LOCAL
-const int mqtt_port = 1883;
-#define TOPIC_MOVIMIENTO "Casa/LivingRoom/Movimiento"
-#define TOPIC_PORTON "Casa/Garage/Porton"
-#define TOPIC_MONOXIDO_CARBONO "Casa/Cocina/MonoxidoCarbono"
 
-WiFiClient espClient;
-PubSubClient client(espClient);
-//long lastMsg = 0;
-int timestamp = 0;           // USAR ESTA VARIABLE LUEGO, PARA la libreria tyme arduino
-StaticJsonDocument<200> doc; // 200 es el tamaño del documento. Ajustarlo al tamaño 50 (avriguar) del message enviado al mqtt broker diveriot
-char mybuffer[256];          //variable temporal para almacenar el par key/value del message para publicarlo en el broker
-XBee xbee = XBee();
-ZBRxIoSampleResponse ioSample = ZBRxIoSampleResponse();
-XBeeAddress64 routerXBeeMAC = XBeeAddress64(0x0013A200, 0x41809E95);
-XBeeAddress64 endDeviceXBeeMAC = XBeeAddress64(0x0013A200, 0x4180A081);
-//------------ FIN Feature MQTT and Xbee-Arduino--------------//
 
 void setup()
 {
   //------- Usado por todas las bibliotecas ---------//
   WiFi.mode(WIFI_OFF);    //Prevents reconnection issue (taking too long to connect)
   Serial.begin(9600);     // Inicio la comunicacion-serial entre el dispositivo XBeeProS2C (Nodo Zigbee Coordinador)
-  xbee.setSerial(Serial); // Seteo/vinculo dicha conmunicacion-serial con el objeto xbee.
+  
   // start soft-serial 1
   Serial1.begin(9600); // Inicio comunicacion-serial-1 para mostrar por el monitor serial los mensajes de depuración
   setup_wifi();
 
-  //------- Timestamp---------//
-  Udp.begin(localPort);        // What port will the UDP/NTP packet respond on?
-  setSyncProvider(getNTPTime); // What is the function that gets the time (in ms since 01/01/1900)?
-  // How often should we synchronise the time on this machine (in seconds)?
-  // Use 300 for 5 minutes but once an hour (3600) is more than enough usually
-  // Use 86400 for 1 daybut once an hour (3600) is more than enough usually
-  setSyncInterval(_resyncSeconds); // just for demo purposes!
-
-  //------- Config mqtt ---------//
-  client.setServer(mqtt_server, mqtt_port); //Falta agregar un mensaje cuando se conecto por primera vez, avisando que el server esa dispobnible y no caido
-  client.setCallback(callback);
-  // Attempt to read a packet XBee
-  Serial1.print("Attempting to read a Zigbee-packet... ");
+  
+  Serial1.print("Se establecion una conexion SoftweareSerial exitosamente... ");
 }
 
 void loop()
