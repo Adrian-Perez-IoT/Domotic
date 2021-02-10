@@ -1,23 +1,9 @@
 #include <SoftwareSerial.h>
 #include <ESP8266WiFi.h>
-
-
-
 #include <ESP8266WiFiMulti.h>
-
-
-
-// forward declarations
-void connectToWifi();
-
-
-
-
 
 ESP8266WiFiMulti wifiMulti;
 boolean connectioWasAlive = true;
-
-
 
 void setup()
 {
@@ -28,8 +14,6 @@ void setup()
   // start soft-serial 1
   Serial1.begin(9600); // Inicio comunicacion-serial-1 para mostrar por el monitor serial los mensajes de depuración
   setup_wifi();
-
-  
   Serial1.print("Se establecion una conexion SoftweareSerial exitosamente... ");
 }
 
@@ -49,7 +33,7 @@ void loop()
 void setup_wifi()
 {
   Serial1.println("\nWait for WiFi... ");
-  wifiMulti.addAP("FBWAY-B262", "965EE62A32AC1825");
+  wifiMulti.addAP("FBWAY-B262", "Perez349");
   wifiMulti.addAP("angelectronica", "4242714angel");
   wifiMulti.addAP("FacIngenieria", "wifialumnos");
   wifiMulti.addAP("BandySam", "bailavanidosa");
