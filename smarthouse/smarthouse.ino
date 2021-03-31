@@ -4,26 +4,37 @@
 
 ESP8266WiFiMulti wifiMulti;
 boolean connectioWasAlive = true;
+int timestamp = 0;
+int pirPin = D0;
+int relayPin = D1;
 
 void setup()
 {
   //------- Usado por todas las bibliotecas ---------//
   WiFi.mode(WIFI_OFF);    //Prevents reconnection issue (taking too long to connect)
-  Serial.begin(9600);     // Inicio la comunicacion-serial entre el dispositivo XBeeProS2C (Nodo Zigbee Coordinador)
   
   // start soft-serial 1
-  Serial1.begin(9600); // Inicio comunicacion-serial-1 para mostrar por el monitor serial los mensajes de depuración
+  Serial1.begin(9600); // Para depurar por monitor serial
   setup_wifi();
-  Serial1.print("Se establecion una conexion SoftweareSerial exitosamente... ");
+  Serial1.print("Conexión Software-Serial establecida. ");
+  pinMode(pirPin, INPUT);
+  pinMode(relayPin, OUTPUT);
 }
 
 void loop()
 {
   monitorWiFi();
-  if ((wifiMulti.run() == WL_CONNECTED) && (connectioWasAlive == true))
+  if (digitalRead(pirPin) == LOW)
   {
-   Serial1.print("me conecte al wifi y la conecion esta viva");
+    Serial1.println("No motion");
+    digitalWrite(relayPin, HIGH); // apago el foco
   }
+  else
+  {
+    Serial1.println("Motion detected  ALARM");
+    digitalWrite(relayPin, LOW); // enciendo el foco
+  }
+  delay(3000);
 }
 
 //--------------------------
@@ -34,9 +45,6 @@ void setup_wifi()
 {
   Serial1.println("\nWait for WiFi... ");
   wifiMulti.addAP("FBWAY-B262", "Perez349");
-  wifiMulti.addAP("angelectronica", "4242714angel");
-  wifiMulti.addAP("FacIngenieria", "wifialumnos");
-  wifiMulti.addAP("BandySam", "bailavanidosa");
   while (wifiMulti.run() != WL_CONNECTED)
   {
     Serial1.print(".");
@@ -71,4 +79,3 @@ void monitorWiFi()
     Serial1.print(WiFi.localIP());
   }
 }
-
