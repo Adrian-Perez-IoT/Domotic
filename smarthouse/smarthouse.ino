@@ -1,6 +1,7 @@
 #include <SoftwareSerial.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
+#define LDR A0
 
 ESP8266WiFiMulti wifiMulti;
 boolean connectioWasAlive = true;
@@ -15,26 +16,38 @@ void setup()
   
   // start soft-serial 1
   Serial1.begin(9600); // Para depurar por monitor serial
+  delay(100);
   setup_wifi();
   Serial1.print("Conexión Software-Serial establecida. ");
   pinMode(pirPin, INPUT);
   pinMode(relayPin, OUTPUT);
+  
 }
 
 void loop()
 {
   monitorWiFi();
-  if (digitalRead(pirPin) == LOW)
-  {
-    Serial1.println("No motion");
-    digitalWrite(relayPin, HIGH); // apago el foco
+  int light = analogRead(LDR);
+  // si es de noche o esta oscuro
+  Serial1.println(light);
+  if(light < 600){
+    if (digitalRead(pirPin) == LOW)
+    {
+      Serial1.println("No motion");
+      digitalWrite(relayPin, HIGH); // apago el foco
+    }
+    else
+    {
+      Serial1.println("Motion detected  ALARM");
+      digitalWrite(relayPin, LOW); // enciendo el foco
+    }
   }
   else
   {
-    Serial1.println("Motion detected  ALARM");
-    digitalWrite(relayPin, LOW); // enciendo el foco
-  }
-  delay(3000);
+   Serial1.println("Es de dia y no se necesita detectar movimiento para encender la lampara");
+  } 
+  
+  delay(2000);
 }
 
 //--------------------------
